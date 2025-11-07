@@ -134,6 +134,61 @@ async def get_recommendations(seeker_profile_id: str, limit: int = 10):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# New: Recommend candidates for a job
+@app.get("/recommendations/job/{job_id}")
+async def get_candidate_recommendations(job_id: str, limit: int = 10):
+    corpus, documents = await _get_all_data()
+    try:
+        if not corpus:
+            return {"status": "success", "recommendations": []}
+
+        vectorizer = TfidfVectorizer(stop_words="english")
+        tfidf_matrix = vectorizer.fit_transform(corpus)
+
+        job_index = next(
+            i for i, doc in enumerate(documents)
+            if doc["id"] == job_id and doc["type"] == "job"
+        )
+
+        job_vector = tfidf_matrix[job_index]
+        cosine_similarities = cosine_similarity(job_vector, tfidf_matrix).flatten()
+
+        seeker_scores = []
+        for i in range(len(documents)):
+            if documents[i]["type"] == "seeker":
+                seeker_scores.append((documents[i]["id"], float(cosine_similarities[i])))
+
+        sorted_seekers = sorted(seeker_scores, key=lambda x: x[1], reverse=True)
+        top_seekers = sorted_seekers[: max(1, min(limit, 50))]
+
+        # Enrich with seeker details
+        recommendations = []
+        for seeker_id, score in top_seekers:
+            seeker_data = await asyncio.to_thread(
+                lambda: supabase.from_("profiles")
+                    .select("full_name, seeker_profiles(bio, skills)")
+                    .eq("id", seeker_id)
+                    .maybe_single()
+                    .execute()
+            )
+            
+            if seeker_data.data and seeker_data.data.get("seeker_profiles"):
+                seeker_profile = seeker_data.data["seeker_profiles"]
+                result = {
+                    "profile_id": seeker_id,
+                    "score": round(score, 4),
+                    "full_name": seeker_data.data.get("full_name", "Unknown"),
+                    "bio": seeker_profile.get("bio", ""),
+                    "skills": seeker_profile.get("skills", []),
+                }
+                recommendations.append(result)
+
+        return {"status": "success", "recommendations": recommendations}
+    except StopIteration:
+        raise HTTPException(status_code=404, detail="Job not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Debug: list seeker profiles with IDs
 @app.get("/debug/seekers")
 async def debug_seekers():
@@ -172,4 +227,4 @@ async def get_recommendations_by_user(user_id: str):
         raise HTTPException(status_code=404, detail="Seeker profile not found. Complete seeker profile setup first.")
 
     # Reuse main recommender
-    return await get_recommendations(profile_id)
+    return await get_recommendations(profile_id) 
