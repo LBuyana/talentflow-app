@@ -8,7 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Dict
 import asyncio
 
-# Load environment variables from .env file: current dir
+# Load environment variables from .env file: current dir: new
 load_dotenv()
 
 # Initialize FastAPI app
