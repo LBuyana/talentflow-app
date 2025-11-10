@@ -7,6 +7,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Dict
 import asyncio
+# CV processing
+import pdfplumber
+import docx
+import io
 
 # Load environment variables from .env file: current directory 1
 load_dotenv()
@@ -21,18 +25,48 @@ key: str = os.environ.get("SUPABASE_SERVICE_KEY")
 # Create Supabase client
 supabase: Client = create_client(url, key)
 
+# Extract text from CV files (PDF or DOCX)
+async def _extract_text_from_cv(cv_path: str) -> str:
+    try:
+        # Download CV from private storage bucket
+        file_bytes = await asyncio.to_thread(
+            lambda: supabase.storage.from_('cvs').download(cv_path)
+        )
+        
+        text = ''
+        
+        if cv_path.endswith('.pdf'):
+            # Extract text from PDF
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + ' '
+        
+        elif cv_path.endswith('.docx'):
+            # Extract text from DOCX
+            doc = docx.Document(io.BytesIO(file_bytes))
+            for para in doc.paragraphs:
+                text += para.text + ' '
+        
+        return text.strip()
+    except Exception as e:
+        # Return empty string if CV cannot be read
+        print(f"Warning: Could not extract CV text from {cv_path}: {str(e)}")
+        return ''
+
 # New: Fetch all jobs and seekers and build a corpus
-async def _get_all_data() -> (List[str], List[Dict[str, str]]):
+async def _get_all_data() -> tuple[List[str], List[Dict]]:
     # Run synchronous Supabase calls in a thread to avoid blocking
     jobs_response = await asyncio.to_thread(
-        lambda: supabase.from_("job_postings").select("id, title, description, required_skills").execute()
+        lambda: supabase.from_("job_postings").select("id, title, description, required_skills, company_name").execute()
     )
     seekers_response = await asyncio.to_thread(
-        lambda: supabase.from_("seeker_profiles").select("profile_id, bio, skills").execute()
+        lambda: supabase.from_("seeker_profiles").select("profile_id, bio, skills, cv_file_path").execute()
     )
 
     corpus: List[str] = []
-    documents: List[Dict[str, str]] = []
+    documents: List[Dict] = []
 
     # Jobs -> documents
     for job in (jobs_response.data or []):
@@ -45,9 +79,10 @@ async def _get_all_data() -> (List[str], List[Dict[str, str]]):
             skills_text = str(req_skills)
         job_text = f"{title} {desc} {skills_text}".strip()
         corpus.append(job_text)
-        documents.append({"id": str(job.get("id")), "type": "job"})
+        # PERFORMANCE FIX: Store full job data
+        documents.append({"id": str(job.get("id")), "type": "job", "data": job})
 
-    # Seekers -> documents
+    # Seekers -> documents (with CV text)
     for seeker in (seekers_response.data or []):
         bio = seeker.get("bio") or ""
         skills = seeker.get("skills") or []
@@ -55,9 +90,17 @@ async def _get_all_data() -> (List[str], List[Dict[str, str]]):
             skills_text = " ".join(map(str, skills))
         else:
             skills_text = str(skills)
-        seeker_text = f"{bio} {skills_text}".strip()
+        
+        # Extract CV text if available
+        cv_text = ''
+        if seeker.get('cv_file_path'):
+            cv_text = await _extract_text_from_cv(seeker['cv_file_path'])
+        
+        # Combine bio, skills, and CV text
+        seeker_text = f"{bio} {skills_text} {cv_text}".strip()
         corpus.append(seeker_text)
-        documents.append({"id": str(seeker.get("profile_id")), "type": "seeker"})
+        # PERFORMANCE FIX: Store full seeker data
+        documents.append({"id": str(seeker.get("profile_id")), "type": "seeker", "data": seeker})
 
     return corpus, documents
 
@@ -104,29 +147,19 @@ async def get_recommendations(seeker_profile_id: str, limit: int = 10):
         sorted_jobs = sorted(job_scores, key=lambda x: x[1], reverse=True)
         top = sorted_jobs[: max(1, min(limit, 50))]
 
-        # Fetch details for top jobs in a single query
-        top_ids = [jid for jid, _ in top]
-        if not top_ids:
-            return {"status": "success", "recommendations": []}
-
-        details_resp = await asyncio.to_thread(
-            lambda: supabase.from_("job_postings")
-                .select("id, title, description, company_name")
-                .in_("id", top_ids)
-                .execute()
-        )
-        job_map = {str(j["id"]): j for j in (details_resp.data or [])}
-
-        recommendations = [
-            {
-                "job_id": jid,
-                "score": round(score, 4),
-                "title": job_map.get(jid, {}).get("title"),
-                "company_name": job_map.get(jid, {}).get("company_name"),
-                "description": job_map.get(jid, {}).get("description"),
-            }
-            for jid, score in top
-        ]
+        # PERFORMANCE FIX: Use cached data from documents instead of DB query
+        recommendations = []
+        for job_id, score in top:
+            job_doc = next((doc for doc in documents if doc['id'] == job_id), None)
+            if job_doc:
+                job_data = job_doc['data']
+                recommendations.append({
+                    "job_id": job_id,
+                    "score": round(score, 4),
+                    "title": job_data.get("title"),
+                    "company_name": job_data.get("company_name"),
+                    "description": job_data.get("description"),
+                })
 
         return {"status": "success", "recommendations": recommendations}
     except StopIteration:
@@ -161,27 +194,32 @@ async def get_candidate_recommendations(job_id: str, limit: int = 10):
         sorted_seekers = sorted(seeker_scores, key=lambda x: x[1], reverse=True)
         top_seekers = sorted_seekers[: max(1, min(limit, 50))]
 
-        # Enrich with seeker details
+        # PERFORMANCE FIX: Use cached data from documents instead of DB queries
         recommendations = []
         for seeker_id, score in top_seekers:
-            seeker_data = await asyncio.to_thread(
-                lambda: supabase.from_("profiles")
-                    .select("full_name, seeker_profiles(bio, skills)")
-                    .eq("id", seeker_id)
-                    .maybe_single()
-                    .execute()
-            )
-            
-            if seeker_data.data and seeker_data.data.get("seeker_profiles"):
-                seeker_profile = seeker_data.data["seeker_profiles"]
-                result = {
+            seeker_doc = next((doc for doc in documents if doc['id'] == seeker_id), None)
+            if seeker_doc:
+                seeker_data = seeker_doc['data']
+                # Still need to fetch full_name from profiles table
+                profile_data = await asyncio.to_thread(
+                    lambda: supabase.from_("profiles")
+                        .select("full_name")
+                        .eq("id", seeker_id)
+                        .maybe_single()
+                        .execute()
+                )
+                
+                full_name = "Unknown"
+                if profile_data.data:
+                    full_name = profile_data.data.get("full_name", "Unknown")
+                
+                recommendations.append({
                     "profile_id": seeker_id,
                     "score": round(score, 4),
-                    "full_name": seeker_data.data.get("full_name", "Unknown"),
-                    "bio": seeker_profile.get("bio", ""),
-                    "skills": seeker_profile.get("skills", []),
-                }
-                recommendations.append(result)
+                    "full_name": full_name,
+                    "bio": seeker_data.get("bio", ""),
+                    "skills": seeker_data.get("skills", []),
+                })
 
         return {"status": "success", "recommendations": recommendations}
     except StopIteration:
