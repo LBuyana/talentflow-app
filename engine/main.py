@@ -96,8 +96,13 @@ async def _get_all_data() -> tuple[List[str], List[Dict]]:
         if seeker.get('cv_file_path'):
             cv_text = await _extract_text_from_cv(seeker['cv_file_path'])
         
-        # Combine bio, skills, and CV text
-        seeker_text = f"{bio} {skills_text} {cv_text}".strip()
+        # WEIGHTED MATCHING LOGIC (Sprint 16)
+        # This is the "weighting" logic to prevent CV text from diluting keywords
+        # We multiply bio 3x and skills 5x to boost their importance
+        # Skills are the most important signal for matching
+        seeker_text = (bio + ' ') * 3 + (skills_text + ' ') * 5 + cv_text
+        seeker_text = seeker_text.strip()
+        
         corpus.append(seeker_text)
         # PERFORMANCE FIX: Store full seeker data
         documents.append({"id": str(seeker.get("profile_id")), "type": "seeker", "data": seeker})
