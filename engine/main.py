@@ -58,7 +58,7 @@ async def _extract_text_from_cv(cv_path: str) -> str:
         print(f"Warning: Could not extract CV text from {cv_path}: {str(e)}")
         return ''
 
-# New: Fetch all jobs and seekers and build a corpus
+# New: Fetch all jobs and seekers and build a corpus-
 async def _get_all_data() -> tuple[List[str], List[Dict]]:
     # Run synchronous Supabase calls in a thread to avoid blocking
     jobs_response = await asyncio.to_thread(
