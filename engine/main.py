@@ -12,7 +12,7 @@ import pdfplumber
 import docx
 import io
 
-# Load environment variables from .env file: current directory 1
+# Load environment variables from .env file: current directory 1-
 load_dotenv()
 
 # Initialize FastAPI app
