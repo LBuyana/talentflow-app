@@ -64,8 +64,9 @@ async def _get_all_data() -> tuple[List[str], List[Dict]]:
     jobs_response = await asyncio.to_thread(
         lambda: supabase.from_("job_postings").select("id, title, description, required_skills, company_name").execute()
     )
+    # SPRINT 18: JOIN with profiles to get full_name (avoid N+1 query)
     seekers_response = await asyncio.to_thread(
-        lambda: supabase.from_("seeker_profiles").select("profile_id, bio, skills, cv_file_path").execute()
+        lambda: supabase.from_("seeker_profiles").select("profile_id, bio, skills, cv_file_path, profiles(full_name)").execute()
     )
 
     corpus: List[str] = []
@@ -106,9 +107,18 @@ async def _get_all_data() -> tuple[List[str], List[Dict]]:
         seeker_text = (bio + ' ') * 3 + (skills_text + ' ') * 5 + cv_text
         seeker_text = seeker_text.strip()
         
+        # SPRINT 18: Extract full_name from profiles JOIN
+        full_name = "Unknown"
+        profiles_data = seeker.get("profiles")
+        if profiles_data and isinstance(profiles_data, dict):
+            full_name = profiles_data.get("full_name", "Unknown")
+        
+        # Add full_name to seeker data for caching
+        seeker_with_name = {**seeker, "full_name": full_name}
+        
         corpus.append(seeker_text)
-        # PERFORMANCE FIX: Store full seeker data
-        documents.append({"id": str(seeker.get("profile_id")), "type": "seeker", "data": seeker})
+        # PERFORMANCE FIX: Store full seeker data with full_name
+        documents.append({"id": str(seeker.get("profile_id")), "type": "seeker", "data": seeker_with_name})
 
     return corpus, documents
 
@@ -200,29 +210,17 @@ async def get_candidate_recommendations(job_id: str, limit: int = 10):
         sorted_seekers = sorted(seeker_scores, key=lambda x: x[1], reverse=True)
         top_seekers = sorted_seekers[: max(1, min(limit, 50))]
 
-        # PERFORMANCE FIX: Use cached data from documents instead of DB queries
+        # SPRINT 18: Use cached data including full_name (no N+1 query)
         recommendations = []
         for seeker_id, score in top_seekers:
             seeker_doc = next((doc for doc in documents if doc['id'] == seeker_id), None)
             if seeker_doc:
                 seeker_data = seeker_doc['data']
-                # Still need to fetch full_name from profiles table
-                profile_data = await asyncio.to_thread(
-                    lambda: supabase.from_("profiles")
-                        .select("full_name")
-                        .eq("id", seeker_id)
-                        .maybe_single()
-                        .execute()
-                )
-                
-                full_name = "Unknown"
-                if profile_data.data:
-                    full_name = profile_data.data.get("full_name", "Unknown")
                 
                 recommendations.append({
                     "profile_id": seeker_id,
                     "score": round(score, 4),
-                    "full_name": full_name,
+                    "full_name": seeker_data.get("full_name", "Unknown"),
                     "bio": seeker_data.get("bio", ""),
                     "skills": seeker_data.get("skills", []),
                 })
