@@ -56,4 +56,5 @@ jobs:
           --cpu=2 \
           --memory=2Gi \
           --cpu-boost \
-          --max-instances=10
+          --max-instances=10 \
+          --no-cpu-throttling

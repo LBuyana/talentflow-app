@@ -1,4 +1,5 @@
 import os
+import logging
 from fastapi import FastAPI, HTTPException
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -11,6 +12,10 @@ import asyncio
 import pdfplumber
 import docx
 import io
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file: current directory 1-
 load_dotenv()
@@ -25,8 +30,17 @@ key: str = os.environ.get("SUPABASE_SERVICE_KEY")
 # Create Supabase client
 supabase: Client = create_client(url, key)
 
-# Load AI model for semantic embeddings (Sprint 17: v4 Engine)
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# Global model variable - will be loaded at startup
+model = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Load the AI model during startup"""
+    global model
+    logger.info("🚀 Starting TalentFlow Engine v4...")
+    logger.info("📦 Loading sentence-transformer model (this may take 30-60 seconds)...")
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    logger.info("✅ Model loaded successfully! Engine is ready.")
 
 # Extract text from CV files (PDF or DOCX)
 async def _extract_text_from_cv(cv_path: str) -> str:
