@@ -4,9 +4,8 @@ from fastapi import FastAPI, HTTPException
 from supabase import create_client, Client
 from dotenv import load_dotenv
 # New: ML + typing + asyncio
-# TalentFlow Engine v4 - Semantic AI-powered matching
 from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from typing import List, Dict
 import asyncio
 # CV processing
@@ -31,17 +30,7 @@ key: str = os.environ.get("SUPABASE_SERVICE_KEY")
 # Create Supabase client
 supabase: Client = create_client(url, key)
 
-# Global model variable - will be loaded at startup
-model = None
 
-@app.on_event("startup")
-async def startup_event():
-    """Load the AI model during startup"""
-    global model
-    logger.info("🚀 Starting TalentFlow Engine v4...")
-    logger.info("📦 Loading sentence-transformer model (this may take 30-60 seconds)...")
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    logger.info("✅ Model loaded successfully! Engine is ready.")
 
 # Extract text from CV files (PDF or DOCX)
 async def _extract_text_from_cv(cv_path: str) -> str:
@@ -160,15 +149,17 @@ async def get_recommendations(seeker_profile_id: str, limit: int = 10):
         if not corpus:
             return {"status": "success", "recommendations": []}
 
-        embedding_matrix = model.encode(corpus)
+
+        vectorizer = TfidfVectorizer(stop_words="english")
+        tfidf_matrix = vectorizer.fit_transform(corpus)
 
         seeker_index = next(
             i for i, doc in enumerate(documents)
             if doc["id"] == seeker_profile_id and doc["type"] == "seeker"
         )
 
-        seeker_vector = embedding_matrix[seeker_index]
-        cosine_similarities = cosine_similarity([seeker_vector], embedding_matrix).flatten()
+        seeker_vector = tfidf_matrix[seeker_index]
+        cosine_similarities = cosine_similarity(seeker_vector, tfidf_matrix).flatten()
 
         job_scores = []
         for i in range(len(documents)):
@@ -207,15 +198,17 @@ async def get_candidate_recommendations(job_id: str, limit: int = 10):
         if not corpus:
             return {"status": "success", "recommendations": []}
 
-        embedding_matrix = model.encode(corpus)
+
+        vectorizer = TfidfVectorizer(stop_words="english")
+        tfidf_matrix = vectorizer.fit_transform(corpus)
 
         job_index = next(
             i for i, doc in enumerate(documents)
             if doc["id"] == job_id and doc["type"] == "job"
         )
 
-        job_vector = embedding_matrix[job_index]
-        cosine_similarities = cosine_similarity([job_vector], embedding_matrix).flatten()
+        job_vector = tfidf_matrix[job_index]
+        cosine_similarities = cosine_similarity(job_vector, tfidf_matrix).flatten()
 
         seeker_scores = []
         for i in range(len(documents)):

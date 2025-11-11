@@ -52,9 +52,4 @@ jobs:
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
           --set-env-vars="SUPABASE_URL=${{ secrets.SUPABASE_URL }},SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }}" \
-          --timeout=600s \
-          --cpu=2 \
-          --memory=4Gi \
-          --cpu-boost \
-          --max-instances=10 \
-          --no-cpu-throttling
+          --timeout=600s
