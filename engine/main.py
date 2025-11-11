@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from supabase import create_client, Client
 from dotenv import load_dotenv
 # New: ML + typing + asyncio
+# TalentFlow Engine v4 - Semantic AI-powered matching
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict
