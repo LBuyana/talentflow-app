@@ -1,117 +1,149 @@
-
-# TalentFlow Job Matching App
+TalentFlow Job Matching App
 
 <p align="center">
-  <img alt="Flutter" src="https://img.shields.io/badge/Frontend-Flutter-blue?style=for-the-badge&logo=flutter"/>
-  <img alt="Python" src="https://img.shields.io/badge/Engine-Python-yellow?style=for-the-badge&logo=python"/>
-  <img alt="Supabase" src="https://img.shields.io/badge/Backend-Supabase-green?style=for-the-badge&logo=supabase"/>
+<img alt="Flutter" src="https://img.shields.io/badge/Frontend-Flutter-blue?style=for-the-badge&logo=flutter"/>
+<img alt="Python" src="https://www.google.com/search?q=https://img.shields.io/badge/Engine-Python-3776AB%3Fstyle%3Dfor-the-badge%26logo%3Dpython"/>
+<img alt="Supabase" src="https://www.google.com/search?q=https://img.shields.io/badge/Backend-Supabase-3ECF8E%3Fstyle%3Dfor-the-badge%26logo%3Dsupabase"/>
+<img alt="Google Cloud" src="https://www.google.com/search?q=https://img.shields.io/badge/Deploy-Cloud%2520Run-4285F4%3Fstyle%3Dfor-the-badge%26logo%3Dgooglecloud"/>
 </p>
 
-Welcome to the official repository for the **TalentFlow Job Matching App**!
-This project is the first step for our new software company, designed to connect job seekers and recruiters efficiently.
+Welcome to the official repository for the TalentFlow Job Matching App!
+This project is the flagship product for our software company, designed to connect job seekers and recruiters efficiently using intelligent AI matching.
 
----
+Project Vision
 
-## Project Vision
+Our mission is to build a smart, intuitive platform that leverages modern technology to streamline the hiring process. This app serves two main user groups:
 
-Our mission is to build a smart, intuitive platform that leverages modern technology to streamline the hiring process. This app will serve two main user groups:
+Job Seekers: Swipe to apply for jobs, view personalized AI recommendations based on CV analysis, and manage applications.
 
-* **Job Seekers:** Helping them find relevant job opportunities based on their skills, experience, and preferences.
-* **Recruiters:** Providing them with a pool of qualified candidates matched by our intelligent engine.
+Recruiters: Post jobs, swipe to save candidates, view AI-ranked applicants, and manage company profiles.
 
----
+Key Features
 
-## Tech Stack
+AI Matching Engine: Custom Python engine using SentenceTransformer (all-MiniLM-L6-v2) to semantically match CVs to Job Descriptions.
+
+Swipe Interface: "Tinder-style" card swiping for quick saving/applying.
+
+Role-Based Access: Secure separate flows for Seekers and Recruiters using Supabase RLS.
+
+Resume Parsing: Automatic text extraction from PDF/DOCX resumes.
+
+Cloud Native: Auto-scaling Python engine hosted on Google Cloud Run.
+
+Tech Stack
 
 This project is built using a modern, scalable technology stack:
 
-* **Frontend (Mobile):** Flutter — For building a beautiful, natively compiled cross-platform (iOS & Android) mobile application from a single codebase.
-* **Backend (BaaS):** Supabase — Our all-in-one backend, providing database (Postgres), authentication, real-time subscriptions, and storage.
-* **Matching Engine (Service):** Python — Used to build the core matching-algorithm engine. This will likely be a separate service (e.g., a REST API using FastAPI or Flask) that communicates with our Supabase backend.
+Frontend (Mobile): Flutter — Cross-platform (iOS & Android) app with Material 3 design and go_router navigation.
 
----
+Backend (BaaS): Supabase — Postgres database, Authentication (Email + OAuth), Storage (Avatars/CVs), and Real-time features.
 
-## Repository Structure
+Matching Engine (Service): Python — FastAPI service running torch and transformers for ML inference. Deployed via Docker.
 
-```
+Repository Structure
+
 /
 ├── app/                  # Flutter mobile application
-│   ├── lib/
-│   ├── pubspec.yaml
+│   ├── lib/              # Dart code (Screens, Widgets, Models)
+│   ├── assets/           # Images and Icons
+│   ├── pubspec.yaml      # Dependencies
 │   └── ...
-├── engine/               # Python matching engine (e.g., FastAPI/Flask API)
-│   ├── app/
-│   ├── requirements.txt
-│   ├── Dockerfile
+├── engine/               # Python matching engine (FastAPI)
+│   ├── main.py           # API Endpoints & Logic
+│   ├── requirements.txt  # Python dependencies (Torch, Scikit-learn, etc.)
+│   ├── Dockerfile        # Container configuration
 │   └── ...
-├── supabase/             # Supabase project configuration
-│   ├── migrations/
-│   ├── functions/
-│   └── config.toml
+├── supabase/             # Supabase configuration
+│   └── migrations/       # Database schema & RLS policies
 ├── .github/              # GitHub-specific files
-│   └── workflows/        # CI/CD pipeline (e.g., GitHub Actions)
+│   └── workflows/        # CI/CD pipeline (deploy_engine.yml)
 ├── .gitignore
 └── README.md
-```
 
----
 
-## Component Breakdown
+Project Status
 
-* **/app** – Contains all code for the Flutter mobile app.
-* **/engine** – Holds the Python-based matching engine. This service will fetch data from Supabase, run matching algorithms (e.g., content-based filtering, collaborative filtering), and provide results via an API.
-* **/supabase** – Contains all database migrations, edge functions, and configuration for our Supabase backend, allowing us to version-control our backend infrastructure.
-* **/.github/workflows** – This is where we will build our “compact pipeline.” We'll define CI/CD (Continuous Integration/Continuous Deployment) workflows here to:
+Service
 
-  * Test the Flutter app
-  * Test the Python engine
-  * Deploy the Python engine (e.g., to a cloud run service)
-  * Deploy Supabase migrations
+Build Status
 
----
+Deployment
 
-## Project Status
+Flutter App
 
-| Service       | Build Status  | Test Coverage |
-| ------------- | ------------- | ------------- |
-| Flutter App   | *Coming soon* | *Coming soon* |
-| Python Engine | *Coming soon* | *Coming soon* |
 
----
 
-## Getting Started
+Local / Store Release
 
-This section will be expanded as we build the project.
+Python Engine
 
-### 1. Clone the Repository
 
-```bash
-git clone https://github.com/<your-username>/talentflow-app.git
+
+
+
+Getting Started
+
+Follow these instructions to run the project locally.
+
+1. Clone the Repository
+
+git clone [https://github.com/LBuyana/talentflow-app.git](https://github.com/LBuyana/talentflow-app.git)
 cd talentflow-app
-```
 
-### 2. Set Up Supabase
 
-```bash
-# Instructions to be added
-```
+2. Set Up Supabase
 
-### 3. Run the Flutter App
+Create a new project at database.new.
 
-```bash
-# Instructions to be added
-```
+Run the SQL scripts provided in the documentation to create tables (profiles, job_postings, applications, etc.) and set up Row Level Security (RLS).
 
-### 4. Run the Python Engine
+Enable Google/GitHub Authentication providers.
 
-```bash
-# Instructions to be added
-```
+Create Storage buckets for avatars (public) and cvs (private).
 
----
+3. Run the Python Engine (Local)
 
-## Contribution Guidelines
+You need Python 3.10+ installed.
 
-To be defined as the project evolves.
+cd engine
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # or .\venv\Scripts\activate on Windows
 
----
+# Install dependencies (Warning: downloads PyTorch ~2GB)
+pip install -r requirements.txt
+
+# Setup environment variables
+# Create a .env file with SUPABASE_URL and SUPABASE_SERVICE_KEY
+
+# Run the server
+uvicorn main:app --reload
+
+
+The engine will run at http://127.0.0.1:8000
+
+4. Run the Flutter App
+
+You need the Flutter SDK installed.
+
+cd app
+# Install dependencies
+flutter pub get
+
+# Setup configuration
+# Update lib/constants.dart with your Engine URL (Local or Cloud Run)
+# Update lib/main.dart with your Supabase Anon Key & URL
+
+# Run on emulator or device
+flutter run
+
+
+Contribution Guidelines
+
+Create a feature branch (git checkout -b feature/AmazingFeature).
+
+Commit your changes (git commit -m 'Add some AmazingFeature').
+
+Push to the branch (git push origin feature/AmazingFeature).
+
+Open a Pull Request.
