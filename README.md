@@ -2,9 +2,9 @@ TalentFlow Job Matching App
 
 <p align="center">
 <img alt="Flutter" src="https://img.shields.io/badge/Frontend-Flutter-blue?style=for-the-badge&logo=flutter"/>
-<img alt="Python" src="https://www.google.com/search?q=https://img.shields.io/badge/Engine-Python-3776AB%3Fstyle%3Dfor-the-badge%26logo%3Dpython"/>
-<img alt="Supabase" src="https://www.google.com/search?q=https://img.shields.io/badge/Backend-Supabase-3ECF8E%3Fstyle%3Dfor-the-badge%26logo%3Dsupabase"/>
-<img alt="Google Cloud" src="https://www.google.com/search?q=https://img.shields.io/badge/Deploy-Cloud%2520Run-4285F4%3Fstyle%3Dfor-the-badge%26logo%3Dgooglecloud"/>
+<img alt="Python" src="https://www.google.com/search?q=https://img.shields.io/badge/Engine-Python-3776AB%3Fstyle%3Dfor-the-badge%26logo%3Dpython%26logoColor%3Dwhite"/>
+<img alt="Supabase" src="https://www.google.com/search?q=https://img.shields.io/badge/Backend-Supabase-3ECF8E%3Fstyle%3Dfor-the-badge%26logo%3Dsupabase%26logoColor%3Dwhite"/>
+<img alt="Google Cloud" src="https://www.google.com/search?q=https://img.shields.io/badge/Deploy-Cloud%2520Run-4285F4%3Fstyle%3Dfor-the-badge%26logo%3Dgooglecloud%26logoColor%3Dwhite"/>
 </p>
 
 Welcome to the official repository for the TalentFlow Job Matching App!
