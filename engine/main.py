@@ -141,55 +141,6 @@ async def test_db():
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-# New: Recommendations endpoint (TF-IDF + Cosine Similarity)
-@app.get("/recommendations/{seeker_profile_id}")
-async def get_recommendations(seeker_profile_id: str, limit: int = 10):
-    corpus, documents = await _get_all_data()
-    try:
-        if not corpus:
-            return {"status": "success", "recommendations": []}
-
-
-        vectorizer = TfidfVectorizer(stop_words="english")
-        tfidf_matrix = vectorizer.fit_transform(corpus)
-
-        seeker_index = next(
-            i for i, doc in enumerate(documents)
-            if doc["id"] == seeker_profile_id and doc["type"] == "seeker"
-        )
-
-        seeker_vector = tfidf_matrix[seeker_index]
-        cosine_similarities = cosine_similarity(seeker_vector, tfidf_matrix).flatten()
-
-        job_scores = []
-        for i in range(len(documents)):
-            if documents[i]["type"] == "job":
-                job_scores.append((documents[i]["id"], float(cosine_similarities[i])))
-
-        # Top-N by score
-        sorted_jobs = sorted(job_scores, key=lambda x: x[1], reverse=True)
-        top = sorted_jobs[: max(1, min(limit, 50))]
-
-        # PERFORMANCE FIX: Use cached data from documents instead of DB query
-        recommendations = []
-        for job_id, score in top:
-            job_doc = next((doc for doc in documents if doc['id'] == job_id), None)
-            if job_doc:
-                job_data = job_doc['data']
-                recommendations.append({
-                    "job_id": job_id,
-                    "score": round(score, 4),
-                    "title": job_data.get("title"),
-                    "company_name": job_data.get("company_name"),
-                    "description": job_data.get("description"),
-                })
-
-        return {"status": "success", "recommendations": recommendations}
-    except StopIteration:
-        raise HTTPException(status_code=404, detail="Seeker profile not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 # New: Recommend candidates for a job
 @app.get("/recommendations/job/{job_id}")
 async def get_candidate_recommendations(job_id: str, limit: int = 10):
@@ -236,6 +187,55 @@ async def get_candidate_recommendations(job_id: str, limit: int = 10):
         return {"status": "success", "recommendations": recommendations}
     except StopIteration:
         raise HTTPException(status_code=404, detail="Job not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# New: Recommendations endpoint (TF-IDF + Cosine Similarity)
+@app.get("/recommendations/{seeker_profile_id}")
+async def get_recommendations(seeker_profile_id: str, limit: int = 10):
+    corpus, documents = await _get_all_data()
+    try:
+        if not corpus:
+            return {"status": "success", "recommendations": []}
+
+
+        vectorizer = TfidfVectorizer(stop_words="english")
+        tfidf_matrix = vectorizer.fit_transform(corpus)
+
+        seeker_index = next(
+            i for i, doc in enumerate(documents)
+            if doc["id"] == seeker_profile_id and doc["type"] == "seeker"
+        )
+
+        seeker_vector = tfidf_matrix[seeker_index]
+        cosine_similarities = cosine_similarity(seeker_vector, tfidf_matrix).flatten()
+
+        job_scores = []
+        for i in range(len(documents)):
+            if documents[i]["type"] == "job":
+                job_scores.append((documents[i]["id"], float(cosine_similarities[i])))
+
+        # Top-N by score
+        sorted_jobs = sorted(job_scores, key=lambda x: x[1], reverse=True)
+        top = sorted_jobs[: max(1, min(limit, 50))]
+
+        # PERFORMANCE FIX: Use cached data from documents instead of DB query
+        recommendations = []
+        for job_id, score in top:
+            job_doc = next((doc for doc in documents if doc['id'] == job_id), None)
+            if job_doc:
+                job_data = job_doc['data']
+                recommendations.append({
+                    "job_id": job_id,
+                    "score": round(score, 4),
+                    "title": job_data.get("title"),
+                    "company_name": job_data.get("company_name"),
+                    "description": job_data.get("description"),
+                })
+
+        return {"status": "success", "recommendations": recommendations}
+    except StopIteration:
+        raise HTTPException(status_code=404, detail="Seeker profile not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
