@@ -1,149 +1,195 @@
-TalentFlow Job Matching App
+# TalentFlow Job Matching App
 
 <p align="center">
-<img alt="Flutter" src="https://img.shields.io/badge/Frontend-Flutter-blue?style=for-the-badge&logo=flutter"/>
-<img alt="Python" src="https://www.google.com/search?q=https://img.shields.io/badge/Engine-Python-3776AB%3Fstyle%3Dfor-the-badge%26logo%3Dpython%26logoColor%3Dwhite"/>
-<img alt="Supabase" src="https://www.google.com/search?q=https://img.shields.io/badge/Backend-Supabase-3ECF8E%3Fstyle%3Dfor-the-badge%26logo%3Dsupabase%26logoColor%3Dwhite"/>
-<img alt="Google Cloud" src="https://www.google.com/search?q=https://img.shields.io/badge/Deploy-Cloud%2520Run-4285F4%3Fstyle%3Dfor-the-badge%26logo%3Dgooglecloud%26logoColor%3Dwhite"/>
+  <img alt="Flutter" src="https://img.shields.io/badge/Frontend-Flutter-blue?style=for-the-badge&logo=flutter"/>
+  <img alt="Python" src="https://img.shields.io/badge/Engine-Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
+  <img alt="Supabase" src="https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white"/>
+  <img alt="Google Cloud" src="https://img.shields.io/badge/Deploy-Cloud%20Run-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white"/>
 </p>
 
-Welcome to the official repository for the TalentFlow Job Matching App!
-This project is the flagship product for our software company, designed to connect job seekers and recruiters efficiently using intelligent AI matching.
+TalentFlow is the official job-matching application for our software company. It is designed to intelligently connect job seekers and recruiters using a custom AI-driven matching engine.
 
-Project Vision
+---
 
-Our mission is to build a smart, intuitive platform that leverages modern technology to streamline the hiring process. This app serves two main user groups:
+## Project Vision
 
-Job Seekers: Swipe to apply for jobs, view personalized AI recommendations based on CV analysis, and manage applications.
+TalentFlow aims to streamline hiring by providing personalized, efficient job and candidate recommendations.
 
-Recruiters: Post jobs, swipe to save candidates, view AI-ranked applicants, and manage company profiles.
+### For Job Seekers
 
-Key Features
+* Swipe to apply for jobs
+* Receive AI-generated job recommendations
+* Manage applications within the app
 
-AI Matching Engine: Custom Python engine using SentenceTransformer (all-MiniLM-L6-v2) to semantically match CVs to Job Descriptions.
+### For Recruiters
 
-Swipe Interface: "Tinder-style" card swiping for quick saving/applying.
+* Post job listings
+* Swipe to save potential candidates
+* View AI-ranked applicants
+* Manage company and job profiles
 
-Role-Based Access: Secure separate flows for Seekers and Recruiters using Supabase RLS.
+---
 
-Resume Parsing: Automatic text extraction from PDF/DOCX resumes.
+## Key Features
 
-Cloud Native: Auto-scaling Python engine hosted on Google Cloud Run.
+* AI Matching Engine using SentenceTransformer (all-MiniLM-L6-v2)
+* Swipe-based interface for job seekers and recruiters
+* Role-based access control via Supabase RLS
+* Resume parsing (PDF/DOCX text extraction)
+* Cloud-native matching service deployed on Google Cloud Run
+* Real-time features powered by Supabase
 
-Tech Stack
+---
 
-This project is built using a modern, scalable technology stack:
+## Tech Stack
 
-Frontend (Mobile): Flutter — Cross-platform (iOS & Android) app with Material 3 design and go_router navigation.
+| Component       | Technology                              |
+| --------------- | --------------------------------------- |
+| Frontend        | Flutter (Material 3, go_router)         |
+| Backend         | Supabase (Postgres, Auth, Storage, RLS) |
+| Matching Engine | Python + FastAPI (Torch, Transformers)  |
+| Deployment      | Docker & Google Cloud Run               |
 
-Backend (BaaS): Supabase — Postgres database, Authentication (Email + OAuth), Storage (Avatars/CVs), and Real-time features.
+---
 
-Matching Engine (Service): Python — FastAPI service running torch and transformers for ML inference. Deployed via Docker.
+## Repository Structure
 
-Repository Structure
-
+```
 /
 ├── app/                  # Flutter mobile application
-│   ├── lib/              # Dart code (Screens, Widgets, Models)
-│   ├── assets/           # Images and Icons
-│   ├── pubspec.yaml      # Dependencies
-│   └── ...
+│   ├── lib/              # Dart code (screens, widgets, models)
+│   ├── assets/           # Images and icons
+│   └── pubspec.yaml
+│
 ├── engine/               # Python matching engine (FastAPI)
-│   ├── main.py           # API Endpoints & Logic
-│   ├── requirements.txt  # Python dependencies (Torch, Scikit-learn, etc.)
-│   ├── Dockerfile        # Container configuration
-│   └── ...
-├── supabase/             # Supabase configuration
-│   └── migrations/       # Database schema & RLS policies
-├── .github/              # GitHub-specific files
-│   └── workflows/        # CI/CD pipeline (deploy_engine.yml)
-├── .gitignore
+│   ├── main.py           # API endpoints and logic
+│   ├── requirements.txt  # Python dependencies
+│   └── Dockerfile        # Container configuration
+│
+├── supabase/             # Supabase configuration and migrations
+│   └── migrations/
+│
+├── .github/workflows/    # CI/CD pipelines
 └── README.md
+```
 
+---
 
-Project Status
+## Project Status
 
-Service
+| Service       | Build Status | Deployment            |
+| ------------- | ------------ | --------------------- |
+| Flutter App   | In Progress  | Local / Not Published |
+| Python Engine | Stable       | Google Cloud Run      |
 
-Build Status
+---
 
-Deployment
+## Getting Started
 
-Flutter App
+This guide covers everything required to run the project locally.
 
+---
 
+### 1. Clone the Repository
 
-Local / Store Release
-
-Python Engine
-
-
-
-
-
-Getting Started
-
-Follow these instructions to run the project locally.
-
-1. Clone the Repository
-
-git clone [https://github.com/LBuyana/talentflow-app.git](https://github.com/LBuyana/talentflow-app.git)
+```bash
+git clone https://github.com/LBuyana/talentflow-app.git
 cd talentflow-app
+```
 
+---
 
-2. Set Up Supabase
+### 2. Set Up Supabase
 
-Create a new project at database.new.
+1. Create a new project at [https://database.new](https://database.new)
+2. Run the SQL scripts to create required tables:
 
-Run the SQL scripts provided in the documentation to create tables (profiles, job_postings, applications, etc.) and set up Row Level Security (RLS).
+   * profiles
+   * job_postings
+   * applications
+   * company profiles
+3. Enable Row Level Security (RLS) and required policies
+4. Enable Google/GitHub authentication
+5. Create storage buckets:
 
-Enable Google/GitHub Authentication providers.
+   * `avatars` (public)
+   * `cvs` (private)
 
-Create Storage buckets for avatars (public) and cvs (private).
+---
 
-3. Run the Python Engine (Local)
+### 3. Run the Python Engine Locally
 
-You need Python 3.10+ installed.
+Requirements: Python 3.10+
 
+```bash
 cd engine
-# Create virtual environment
+
 python -m venv venv
-source venv/bin/activate  # or .\venv\Scripts\activate on Windows
+source venv/bin/activate     # Windows: venv\Scripts\activate
 
-# Install dependencies (Warning: downloads PyTorch ~2GB)
 pip install -r requirements.txt
+```
 
-# Setup environment variables
-# Create a .env file with SUPABASE_URL and SUPABASE_SERVICE_KEY
+Create a `.env` file:
 
-# Run the server
+```
+SUPABASE_URL=your_url
+SUPABASE_SERVICE_KEY=your_service_key
+```
+
+Start the server:
+
+```bash
 uvicorn main:app --reload
+```
 
+The engine will be available at:
 
-The engine will run at http://127.0.0.1:8000
+```
+http://127.0.0.1:8000
+```
 
-4. Run the Flutter App
+---
 
-You need the Flutter SDK installed.
+### 4. Run the Flutter App
 
+Requirements: Flutter SDK
+
+```bash
 cd app
-# Install dependencies
 flutter pub get
+```
 
-# Setup configuration
-# Update lib/constants.dart with your Engine URL (Local or Cloud Run)
-# Update lib/main.dart with your Supabase Anon Key & URL
+Update configuration:
 
-# Run on emulator or device
+* `lib/constants.dart` → Engine URL (local or Cloud Run)
+* `lib/main.dart` → Supabase URL and Anon Key
+
+Run the app:
+
+```bash
 flutter run
+```
+
+---
+
+## Contribution Guidelines
+
+1. Create a feature branch
+
+   ```bash
+   git checkout -b feature/YourFeature
+   ```
+2. Commit changes
+
+   ```bash
+   git commit -m "Add YourFeature"
+   ```
+3. Push the branch
+
+   ```bash
+   git push origin feature/YourFeature
+   ```
+4. Open a Pull Request
 
 
-Contribution Guidelines
-
-Create a feature branch (git checkout -b feature/AmazingFeature).
-
-Commit your changes (git commit -m 'Add some AmazingFeature').
-
-Push to the branch (git push origin feature/AmazingFeature).
-
-Open a Pull Request.
